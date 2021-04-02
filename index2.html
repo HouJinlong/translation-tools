@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.2.0/jsoneditor.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.2.0/jsoneditor.min.css" rel="stylesheet">
+    <style>
+        .flex{
+            display: flex;
+            justify-content: center;
+        }
+        #jsoneditor,#textarea{
+            display: block;;
+            flex: 1;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex">
+        <div id="jsoneditor" style="width: 400px; height: 400px;"></div>
+        <textarea name="" id="textarea" cols="30" rows="10" ></textarea>
+    </div>
+    <div class="flex">
+        <input type="file" id="file"  accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <input type="text" id="fileName" placeholder="请输入excel名称">
+        <button id="button" >下载</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    <script>
+        $(function(){
+            $('#button').hide()
+            const editor = new JSONEditor(document.getElementById("jsoneditor"), {})
+            const varArr = ['en','ar','ind']
+            const headers =  ['key','英语','阿语','印尼语']
+            const addStr = `return {${varArr[0]}, ${varArr[1]}, ${varArr[2]}}[lang || 'en'] || en`
+            function getData(){
+                let ret = {}
+                try {
+                    eval(`${textarea.value.replaceAll(addStr,'').replaceAll('const ','window.')}`)
+                    varArr.forEach(v=>{
+                        ret[v] = window[v]||{}
+                    })
+                } catch (error) {
+                    console.log('error: ', error);
+                    
+                }
+                console.log('ret: ', ret);
+                return ret
+            }
+            function getAoA(data){
+                let ret = []
+                Object.keys(ar).forEach(v=>{
+                    ret.push([v,...varArr.map(key=>{
+                        return data[key][v] || ''
+                    })])
+                })
+                return ret; 
+            }
+            $('#file').change(function(e){
+                const reader = new FileReader()
+                reader.onload = (_data) => {
+                    const wb = XLSX.read(_data.target.result, {
+                        type: 'binary',
+                    })
+                    let data = {}
+                    varArr.forEach(v=>{
+                        data[v] = window[v]||{}
+                    })
+                    const [key,...language] = headers
+                    console.log(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+                    XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).forEach(v=>{
+                        varArr.forEach((dataKey,i)=>{
+                            data[dataKey][v[key]] = v[language[i]]||""
+                        })
+                    })
+                    console.log('data: ', data);
+                    $('#textarea').val(`
+const ${varArr[0]} = ${JSON.stringify(data[varArr[0]],null,2)}
+
+const ${varArr[1]} = ${JSON.stringify(data[varArr[1]],null,2)}
+
+const ${varArr[2]} = ${JSON.stringify(data[varArr[2]],null,2)}
+
+${addStr}
+                    `).change()
+                   
+                }
+                reader.readAsBinaryString(e.target.files[0])
+            })
+            $('#textarea').change(function(){
+                editor.set(getData())
+                $('#button').show()
+            })
+            $('#button').click(function(){
+                if($('#fileName').val()){
+                    const wb = XLSX.utils.book_new()
+                    const ws = XLSX.utils.aoa_to_sheet([
+                        headers,
+                        ...getAoA(getData())
+                    ])
+                    XLSX.utils.book_append_sheet(wb, ws, 'SheetJS')
+                    XLSX.writeFile(wb, $('#fileName').val()+'.xlsx')
+                }else{
+                    alert('请输入文件名')
+                }
+            })
+        })
+    </script>
+</body>
+</body>
+</html>

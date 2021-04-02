@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="https://cdn.bootcdn.net/ajax/libs/jsoneditor/9.2.0/jsoneditor.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/jsoneditor/9.2.0/jsoneditor.min.js"></script>
+    <style>
+        .flex{
+            display: flex;
+            justify-content: center;
+        }
+        #jsoneditor,#textarea{
+            display: block;;
+            flex: 1;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex">
+        <div id="jsoneditor" style="width: 400px; height: 400px;"></div>
+        <textarea name="" id="textarea" cols="30" rows="10" ></textarea>
+    </div>
+    <div class="flex">
+        <input type="file" id="file"  accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <input type="text" id="fileName" placeholder="请输入excel名称">
+        <button id="button" >下载</button>
+    </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    <script>
+        $(function(){
+            $('#button').hide()
+            const editor = new JSONEditor(document.getElementById("jsoneditor"), {})
+            const headers =  ['key','英语','阿语','印尼语']
+            function getAoA(json,str=''){
+                    let ret = []
+                    Object.keys(json).forEach(v=>{
+                        const item =json[v];
+                        if(Array.isArray(item)){
+                            ret.push([str+v,item[0],item[1]])
+                        }else{
+                            ret.push(...getAoA(item,str+v+'.'))
+                        }
+                    })
+                    return ret; 
+            }
+            $('#file').change(function(e){
+                const reader = new FileReader()
+                reader.onload = (_data) => {
+                    const wb = XLSX.read(_data.target.result, {
+                        type: 'binary',
+                    })
+                    let data = {}
+                    const [key,...language] = headers
+                    XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).forEach(v=>{
+                        _.setWith(data, v[key],language.map(ikey=>{
+                            return v[ikey]||''
+                        }),Object);
+                    })
+                    console.log('data: ', data);
+                    $('#textarea').val(JSON.stringify(data,null,2)) .change()
+                   
+                }
+                reader.readAsBinaryString(e.target.files[0])
+            })
+            $('#textarea').change(function(){
+                eval(`var json = ${textarea.value}`)
+                editor.set(json)
+                $('#button').show()
+            })
+            $('#button').click(function(){
+                if($('#fileName').val()){
+                    eval(`var json = ${textarea.value}`)
+                        const wb = XLSX.utils.book_new()
+                        const ws = XLSX.utils.aoa_to_sheet([
+                            headers,
+                            ...getAoA(json)
+                        ])
+                        XLSX.utils.book_append_sheet(wb, ws, 'SheetJS')
+                        XLSX.writeFile(wb, $('#fileName').val()+'.xlsx')
+                }else{
+                    alert('请输入文件名')
+                }
+            })
+        })
+    </script>
+</body>
+</body>
+</html>
