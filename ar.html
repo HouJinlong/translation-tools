@@ -6,14 +6,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        textarea{
-            width: 100vw;
-            height: 100vh;
+        body{
+            padding: 20px;
+            display: flex;
+        }
+        .textarea{
+            width: 300px;
+            margin-left: 10px;
+        }
+        .textarea1{
+            flex: 1;
+        }
+        .textarea1 textarea{
+            width: 100%;
+            height: 40vh;
             padding: 10px;
+            direction: rtl;
+            box-sizing: border-box;
+        }
+        .textarea textarea{
+            width: 100%;
+            height: 40vh;
+            padding: 10px;
+            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
-    <textarea name="" id="" cols="30" rows="10"></textarea>
+    <div class="textarea1">
+        阿语编辑区
+        <textarea  name="" id="" cols="30" rows="10"></textarea>
+    </div>
+    <div class="textarea">
+        插值编辑区
+        <textarea  name="" id="" cols="30" rows="10"></textarea>
+    </div>
 </body>
 </html>
