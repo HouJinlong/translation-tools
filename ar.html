@@ -8,6 +8,8 @@
     <style>
         body{
             padding: 20px;
+        }
+        .edit{
             display: flex;
         }
         .textarea{
@@ -30,16 +32,51 @@
             padding: 10px;
             box-sizing: border-box;
         }
+        .show div{
+            direction: rtl;
+        }
+        .show span{
+           color: red;
+        }
     </style>
 </head>
 <body>
-    <div class="textarea1">
-        阿语编辑区
-        <textarea  name="" id="" cols="30" rows="10"></textarea>
+    <div id="App">
+        <div class="edit">
+            <div class="textarea1">
+                阿语编辑区
+                <textarea v-model="ar" name="" id="" cols="30" rows="10"></textarea>
+            </div>
+            <div class="textarea">
+                插值编辑区
+                <textarea  name="" id="" cols="30" rows="10"></textarea>
+            </div>
+        </div>
+        <div class="show">
+            真实效果展示区
+            <div v-html="fun(ar)"></div>
+        </div>
     </div>
-    <div class="textarea">
-        插值编辑区
-        <textarea  name="" id="" cols="30" rows="10"></textarea>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://unpkg.com/i18next@21.3.3/dist/umd/i18next.min.js"></script>
+    <script>
+        Vue.config.errorHandler = function (err, vm, info) {
+                    console.log(err, vm, info);
+        }
+        var vm = new Vue({
+            el:'#App',
+            data:{
+                ar:''
+            },
+            methods:{
+                fun(str){
+                    return str.replace(/<(?:[^<>]+)>/g,(v)=>{
+
+                        return v.replace(/[^<>\/]+/,'span')
+                    })
+                }
+            }
+        })
+    </script>
 </body>
 </html>
