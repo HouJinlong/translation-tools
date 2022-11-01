@@ -37,13 +37,13 @@
         $(function(){
             $('#button').hide()
             const editor = new JSONEditor(document.getElementById("jsoneditor"), {})
-            const headers =  ['说明','文案','英语','阿语','印尼语',"泰语","越南语"]
+            const headers =  ['文案','英语','阿语','印尼语']
             function getAoA(json,str=''){
                     let ret = []
                     Object.keys(json).forEach(v=>{
                         const item =json[v];
                         if(Array.isArray(item)){
-                            ret.push([str+v,item[0],item[1]])
+                            ret.push([str+v,...item])
                         }else{
                             ret.push(...getAoA(item,str+v+'.'))
                         }
@@ -57,7 +57,7 @@
                         type: 'binary',
                     })
                     let data = {}
-                    const [key,w,...language] = headers
+                    const [key,...language] = headers
                     console.log(wb.Sheets[wb.SheetNames[0]]);
                     XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).forEach(v=>{
                         _.setWith(data, v[key],language.map(ikey=>{
